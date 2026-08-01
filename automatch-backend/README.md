@@ -1,5 +1,5 @@
 # AutoMatch AI — Backend (Phase 1 + 2 + 3 + 4)
-
+@@ Thanking car.info for providing manufacturers catalog @@
 AI-powered car recommendation & decision support system.
 
 - **Phase 1**: data model, CRUD API, pipeline metadata scaffolding.
