@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Instrument-cluster palette --- */
+  --color-bg: #EEF0EC;
+  --color-surface: #FFFFFF;
+  --color-ink: #15181B;
+  --color-ink-soft: #565C56;
+  --color-line: #D8DBD3;
+  --color-primary: #2B3A67;
+  --color-primary-soft: #3E5091;
+  --color-accent: #1F6F54;
+  --color-accent-soft: #E5F0EA;
+  --color-caution: #C9821F;
+  --color-caution-soft: #FBF0DD;
+  --color-danger: #B23A2F;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Reduced motion respected globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Visible keyboard focus, not just browser default outline removal */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
