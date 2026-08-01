@@ -205,8 +205,3 @@ product:
 
 See `backend/README.md`'s "Still not built" section for the full,
 unvarnished list.
-
-## License
-
-No license file included yet — add one (MIT is a common default for a
-portfolio project like this) before treating this as open source.

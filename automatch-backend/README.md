@@ -186,7 +186,7 @@ from the trim name itself — real signal in Tata's naming convention
 placeholders. Every `ScrapedVariant` this produces has `price=None`. Two
 real ways to close that gap, neither built yet:
 1. A headless browser (Selenium/Playwright) that picks a city and waits
-   for the async price call — the SRS's own tech stack already
+   for the async price call — tech stack already
    anticipated this ("Selenium (only if necessary)").
 2. Fill price manually via the Catalog UI/API after ingestion, using the
    variant names the scraper already gives you.
