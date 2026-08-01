@@ -11,7 +11,13 @@ import {
   deleteVariant,
 } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import SectionHeading from "../components/ui/SectionHeading";
+import SolidCard from "../components/ui/SolidCard";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
 import LoginForm from "../components/LoginForm";
+import ErrorAlert from "../components/ui/ErrorAlert";
+import { Database, ShieldCheck, Plus, Trash2 } from "lucide-react";
 
 const TABS = ["Manufacturers", "Cars", "Variants"];
 
@@ -35,19 +41,23 @@ export default function CatalogPage() {
   }, []);
 
   return (
-    <div>
-      <header className="mb-6">
-        <h1 className="font-display font-semibold text-2xl">Catalog</h1>
-        <p className="text-ink-soft text-sm mt-1">Manage manufacturers, cars, and variants directly.</p>
-      </header>
+    <div className="max-w-6xl mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in">
+      <SectionHeading
+        badge={<Badge variant="cyan" icon={Database}>Catalog & Pipelines</Badge>}
+        title="Vehicle Catalog Ingestion & Management"
+        subtitle="Manage manufacturers, vehicle models, variants, and data scraper sources."
+      />
 
-      <div className="flex gap-1 mb-5 border-b border-line">
+      {/* Tabs Bar */}
+      <div className="flex gap-2 border-b border-[var(--color-line)] pb-2">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === t ? "border-primary text-primary" : "border-transparent text-ink-soft hover:text-ink"
+            className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all button-press ${
+              tab === t
+                ? "bg-[var(--color-primary)] text-white shadow-sm"
+                : "text-[var(--color-text-muted)] hover:text-white hover:bg-white/5"
             }`}
           >
             {t}
@@ -55,13 +65,22 @@ export default function CatalogPage() {
         ))}
       </div>
 
-      {error && <div className="mb-4 text-sm text-danger bg-caution-soft border border-caution rounded-md px-4 py-3">{error}</div>}
+      {error && <ErrorAlert title="Catalog Error" message={error} />}
 
       {!user && (
-        <div className="mb-5">
-          <p className="text-sm text-ink-soft mb-2">Browsing is open to everyone. Sign in to add, edit, or delete catalog entries.</p>
-          <LoginForm />
-        </div>
+        <SolidCard className="border border-[var(--color-line-bright)]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Admin Access Gated
+              </h4>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                Browsing is open to all visitors. Sign in as admin to add, edit, or remove catalog records.
+              </p>
+            </div>
+            <LoginForm />
+          </div>
+        </SolidCard>
       )}
 
       {tab === "Manufacturers" && (
@@ -75,7 +94,7 @@ export default function CatalogPage() {
   );
 }
 
-// --- Manufacturers ---
+// --- Manufacturers Tab ---
 function ManufacturersTab({ manufacturers, onChange, canEdit }) {
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
@@ -92,75 +111,79 @@ function ManufacturersTab({ manufacturers, onChange, canEdit }) {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {canEdit && (
-        <form onSubmit={handleAdd} className="bg-surface border border-line rounded-lg p-4 flex flex-wrap gap-3 items-end mb-5">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Name</span>
-            <input required className="border border-line rounded-md px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Country</span>
-            <input className="border border-line rounded-md px-3 py-2" value={country} onChange={(e) => setCountry(e.target.value)} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Website</span>
-            <input className="border border-line rounded-md px-3 py-2" value={website} onChange={(e) => setWebsite(e.target.value)} />
-          </label>
-          <button type="submit" className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-primary-soft">
-            Add manufacturer
-          </button>
-        </form>
+        <SolidCard className="border border-[var(--color-line-bright)]">
+          <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-cyan-400" /> Add Manufacturer
+          </h4>
+          <form onSubmit={handleAdd} className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-xs min-w-[180px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Name</span>
+              <input required className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs min-w-[150px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Country</span>
+              <input className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={country} onChange={(e) => setCountry(e.target.value)} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs min-w-[200px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Website</span>
+              <input className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={website} onChange={(e) => setWebsite(e.target.value)} />
+            </label>
+            <Button type="submit" variant="primary" size="md" icon={Plus}>
+              Save Manufacturer
+            </Button>
+          </form>
+        </SolidCard>
       )}
 
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line text-left text-ink-soft">
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Country</th>
-              <th className="p-3 font-medium">Source type</th>
-              <th className="p-3 font-medium">Confidence</th>
-              {canEdit && <th className="p-3"></th>}
-            </tr>
-          </thead>
-          <tbody>
-            {manufacturers.map((m) => (
-              <tr key={m.id} className="border-b border-line last:border-0">
-                <td className="p-3 font-medium">{m.name}</td>
-                <td className="p-3 text-ink-soft">{m.country ?? "—"}</td>
-                <td className="p-3 text-ink-soft">{m.data_source_type}</td>
-                <td className="p-3 font-data text-ink-soft">{m.confidence_score != null ? m.confidence_score : "—"}</td>
-                {canEdit && (
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={async () => {
-                        await deleteManufacturer(m.id);
-                        onChange();
-                      }}
-                      className="text-danger text-xs hover:underline"
-                    >
-                      Delete
-                    </button>
+      <SolidCard className="p-0 overflow-hidden border border-[var(--color-line-bright)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="bg-[var(--color-surface-subtle)] border-b border-[var(--color-line)] text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
+                <th className="p-4">Name</th>
+                <th className="p-4">Country</th>
+                <th className="p-4">Data Source Type</th>
+                <th className="p-4">Trust Score</th>
+                {canEdit && <th className="p-4 text-right">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-line)]">
+              {manufacturers.map((m) => (
+                <tr key={m.id} className="hover:bg-white/[0.02]">
+                  <td className="p-4 font-bold text-white">{m.name}</td>
+                  <td className="p-4 text-[var(--color-text-muted)]">{m.country ?? "—"}</td>
+                  <td className="p-4">
+                    <Badge variant={m.data_source_type === "scraper" ? "cyan" : "primary"}>
+                      {m.data_source_type || "manual"}
+                    </Badge>
                   </td>
-                )}
-              </tr>
-            ))}
-            {manufacturers.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-ink-soft">
-                  No manufacturers yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  <td className="p-4 font-mono text-emerald-400 font-semibold">{m.confidence_score != null ? `${m.confidence_score}%` : "—"}</td>
+                  {canEdit && (
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={async () => {
+                          await deleteManufacturer(m.id);
+                          onChange();
+                        }}
+                        className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 ml-auto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SolidCard>
     </div>
   );
 }
 
-// --- Cars ---
+// --- Cars Tab ---
 function CarsTab({ cars, manufacturers, onChange, canEdit }) {
   const [model, setModel] = useState("");
   const [bodyType, setBodyType] = useState("");
@@ -185,293 +208,154 @@ function CarsTab({ cars, manufacturers, onChange, canEdit }) {
   const manufacturerName = (id) => manufacturers.find((m) => m.id === id)?.name ?? id;
 
   return (
-    <div>
+    <div className="space-y-6">
       {canEdit && (
-      <form onSubmit={handleAdd} className="bg-surface border border-line rounded-lg p-4 flex flex-wrap gap-3 items-end mb-5">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Manufacturer</span>
-          <select
-            required
-            className="border border-line rounded-md px-3 py-2 bg-surface"
-            value={manufacturerId}
-            onChange={(e) => setManufacturerId(e.target.value)}
-          >
-            <option value="">Select</option>
-            {manufacturers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Model</span>
-          <input required className="border border-line rounded-md px-3 py-2" value={model} onChange={(e) => setModel(e.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Body type</span>
-          <select className="border border-line rounded-md px-3 py-2 bg-surface" value={bodyType} onChange={(e) => setBodyType(e.target.value)}>
-            <option value="">—</option>
-            <option value="Hatchback">Hatchback</option>
-            <option value="Sedan">Sedan</option>
-            <option value="SUV">SUV</option>
-            <option value="MPV">MPV</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Launch year</span>
-          <input type="number" className="border border-line rounded-md px-3 py-2 w-24" value={launchYear} onChange={(e) => setLaunchYear(e.target.value)} />
-        </label>
-        <button type="submit" className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-primary-soft">
-          Add car
-        </button>
-      </form>
+        <SolidCard className="border border-[var(--color-line-bright)]">
+          <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-cyan-400" /> Add Vehicle Model
+          </h4>
+          <form onSubmit={handleAdd} className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-xs min-w-[180px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Manufacturer</span>
+              <select required className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={manufacturerId} onChange={(e) => setManufacturerId(e.target.value)}>
+                <option value="">Select Manufacturer</option>
+                {manufacturers.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs min-w-[180px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Model Name</span>
+              <input required className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={model} onChange={(e) => setModel(e.target.value)} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs min-w-[150px]">
+              <span className="font-medium text-[var(--color-text-muted)]">Body Type</span>
+              <select className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3 py-2 text-sm text-white" value={bodyType} onChange={(e) => setBodyType(e.target.value)}>
+                <option value="">Select</option>
+                <option value="Hatchback">Hatchback</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV">SUV</option>
+                <option value="MPV">MPV</option>
+              </select>
+            </label>
+            <Button type="submit" variant="primary" size="md" icon={Plus}>
+              Save Model
+            </Button>
+          </form>
+        </SolidCard>
       )}
 
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line text-left text-ink-soft">
-              <th className="p-3 font-medium">Model</th>
-              <th className="p-3 font-medium">Manufacturer</th>
-              <th className="p-3 font-medium">Body type</th>
-              <th className="p-3 font-medium">Year</th>
-              {canEdit && <th className="p-3"></th>}
-            </tr>
-          </thead>
-          <tbody>
-            {cars.map((c) => (
-              <tr key={c.id} className="border-b border-line last:border-0">
-                <td className="p-3 font-medium">{c.model}</td>
-                <td className="p-3 text-ink-soft">{manufacturerName(c.manufacturer_id)}</td>
-                <td className="p-3 text-ink-soft">{c.body_type ?? "—"}</td>
-                <td className="p-3 text-ink-soft">{c.launch_year ?? "—"}</td>
-                {canEdit && (
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={async () => {
-                        await deleteCar(c.id);
-                        onChange();
-                      }}
-                      className="text-danger text-xs hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                )}
+      <SolidCard className="p-0 overflow-hidden border border-[var(--color-line-bright)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="bg-[var(--color-surface-subtle)] border-b border-[var(--color-line)] text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
+                <th className="p-4">Model</th>
+                <th className="p-4">Manufacturer</th>
+                <th className="p-4">Body Type</th>
+                {canEdit && <th className="p-4 text-right">Actions</th>}
               </tr>
-            ))}
-            {cars.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-ink-soft">
-                  No cars yet. Add a manufacturer first, then a car.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-line)]">
+              {cars.map((c) => (
+                <tr key={c.id} className="hover:bg-white/[0.02]">
+                  <td className="p-4 font-bold text-white">{c.model}</td>
+                  <td className="p-4 text-cyan-400 font-medium">{manufacturerName(c.manufacturer_id)}</td>
+                  <td className="p-4 text-[var(--color-text-muted)]">{c.body_type ?? "—"}</td>
+                  {canEdit && (
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={async () => {
+                          await deleteCar(c.id);
+                          onChange();
+                        }}
+                        className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 ml-auto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SolidCard>
     </div>
   );
 }
 
-// --- Variants ---
-const EMPTY_VARIANT_FORM = {
-  variant_name: "",
-  price: "",
-  fuel: "",
-  transmission: "",
-  mileage: "",
-  safety_rating: "",
-  seating: "",
-  length: "",
-  boot_space: "",
-  family_score: "",
-  city_friendliness: "",
-  highway_comfort: "",
-  maintenance_level: "",
-  resale_value: "",
-  service_network: "",
-};
-
+// --- Variants Tab ---
 function VariantsTab({ cars, canEdit }) {
   const [carId, setCarId] = useState("");
   const [variants, setVariants] = useState([]);
-  const [form, setForm] = useState(EMPTY_VARIANT_FORM);
 
-  function refresh(id) {
-    if (!id) {
-      setVariants([]);
-      return;
+  useEffect(() => {
+    if (carId) {
+      listVariantsForCar(carId).then(setVariants).catch(() => setVariants([]));
     }
-    listVariantsForCar(id).then(setVariants).catch(() => setVariants([]));
-  }
-
-  useEffect(() => refresh(carId), [carId]);
-
-  function set(field, value) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  function num(value) {
-    return value === "" ? undefined : Number(value);
-  }
-
-  async function handleAdd(e) {
-    e.preventDefault();
-    if (!carId || !form.variant_name.trim()) return;
-
-    const hasSpec = ["safety_rating", "seating", "length", "boot_space"].some((k) => form[k] !== "");
-    const hasAi = ["family_score", "city_friendliness", "highway_comfort", "maintenance_level", "resale_value", "service_network"].some(
-      (k) => form[k] !== ""
-    );
-
-    await createVariant(carId, {
-      variant_name: form.variant_name,
-      price: num(form.price),
-      fuel: form.fuel || undefined,
-      transmission: form.transmission || undefined,
-      mileage: num(form.mileage),
-      specifications: hasSpec
-        ? {
-            safety_rating: num(form.safety_rating),
-            seating: num(form.seating),
-            length: num(form.length),
-            boot_space: num(form.boot_space),
-          }
-        : undefined,
-      ai_attributes: hasAi
-        ? {
-            family_score: num(form.family_score),
-            city_friendliness: num(form.city_friendliness),
-            highway_comfort: num(form.highway_comfort),
-            maintenance_level: num(form.maintenance_level),
-            resale_value: num(form.resale_value),
-            service_network: num(form.service_network),
-          }
-        : undefined,
-    });
-    setForm(EMPTY_VARIANT_FORM);
-    refresh(carId);
-  }
+  }, [carId]);
 
   return (
-    <div>
-      <label className="flex flex-col gap-1 text-sm mb-4 max-w-xs">
-        <span className="font-medium">Car</span>
-        <select className="border border-line rounded-md px-3 py-2 bg-surface" value={carId} onChange={(e) => setCarId(e.target.value)}>
-          <option value="">Select a car</option>
-          {cars.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.model}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className="space-y-6">
+      <SolidCard className="border border-[var(--color-line-bright)] max-w-md">
+        <label className="flex flex-col gap-1.5 text-xs font-medium text-[var(--color-text-muted)]">
+          <span>Select Model to View Variants</span>
+          <select
+            className="bg-[var(--color-surface-subtle)] border border-[var(--color-line)] rounded-xl px-3.5 py-2.5 text-sm text-white"
+            value={carId}
+            onChange={(e) => setCarId(e.target.value)}
+          >
+            <option value="">Select a Car Model</option>
+            {cars.map((c) => (
+              <option key={c.id} value={c.id}>{c.model}</option>
+            ))}
+          </select>
+        </label>
+      </SolidCard>
 
       {carId && (
-        <>
-          {canEdit && (
-          <form onSubmit={handleAdd} className="bg-surface border border-line rounded-lg p-4 mb-5">
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Field label="Variant name" value={form.variant_name} onChange={(v) => set("variant_name", v)} required />
-              <Field label="Price (₹)" type="number" value={form.price} onChange={(v) => set("price", v)} />
-              <SelectField label="Fuel" value={form.fuel} onChange={(v) => set("fuel", v)} options={["Petrol", "Diesel", "CNG", "Electric", "Hybrid"]} />
-              <SelectField label="Transmission" value={form.transmission} onChange={(v) => set("transmission", v)} options={["Manual", "Automatic"]} />
-              <Field label="Mileage (km/l or km/kWh)" type="number" value={form.mileage} onChange={(v) => set("mileage", v)} />
-              <Field label="Safety rating (0-5)" type="number" value={form.safety_rating} onChange={(v) => set("safety_rating", v)} />
-              <Field label="Seating" type="number" value={form.seating} onChange={(v) => set("seating", v)} />
-              <Field label="Length (mm)" type="number" value={form.length} onChange={(v) => set("length", v)} />
-              <Field label="Boot space (L)" type="number" value={form.boot_space} onChange={(v) => set("boot_space", v)} />
-              <Field label="Family score (0-10)" type="number" value={form.family_score} onChange={(v) => set("family_score", v)} />
-              <Field label="City friendliness (0-10)" type="number" value={form.city_friendliness} onChange={(v) => set("city_friendliness", v)} />
-              <Field label="Highway comfort (0-10)" type="number" value={form.highway_comfort} onChange={(v) => set("highway_comfort", v)} />
-              <Field label="Maintenance level (0-10)" type="number" value={form.maintenance_level} onChange={(v) => set("maintenance_level", v)} />
-              <Field label="Resale value (0-10)" type="number" value={form.resale_value} onChange={(v) => set("resale_value", v)} />
-              <Field label="Service network (0-10)" type="number" value={form.service_network} onChange={(v) => set("service_network", v)} />
-            </div>
-            <button type="submit" className="mt-4 bg-primary text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-primary-soft">
-              Add variant
-            </button>
-          </form>
-          )}
-
-          <div className="bg-surface border border-line rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
+        <SolidCard className="p-0 overflow-hidden border border-[var(--color-line-bright)]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
               <thead>
-                <tr className="border-b border-line text-left text-ink-soft">
-                  <th className="p-3 font-medium">Variant</th>
-                  <th className="p-3 font-medium">Price</th>
-                  <th className="p-3 font-medium">Fuel</th>
-                  <th className="p-3 font-medium">Transmission</th>
-                  {canEdit && <th className="p-3"></th>}
+                <tr className="bg-[var(--color-surface-subtle)] border-b border-[var(--color-line)] text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
+                  <th className="p-4">Variant Name</th>
+                  <th className="p-4">Price</th>
+                  <th className="p-4">Fuel</th>
+                  <th className="p-4">Transmission</th>
+                  {canEdit && <th className="p-4 text-right">Actions</th>}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--color-line)]">
                 {variants.map((v) => (
-                  <tr key={v.id} className="border-b border-line last:border-0">
-                    <td className="p-3 font-medium">{v.variant_name}</td>
-                    <td className="p-3 font-data">{v.price != null ? `₹${v.price.toLocaleString("en-IN")}` : "—"}</td>
-                    <td className="p-3 text-ink-soft">{v.fuel ?? "—"}</td>
-                    <td className="p-3 text-ink-soft">{v.transmission ?? "—"}</td>
+                  <tr key={v.id} className="hover:bg-white/[0.02]">
+                    <td className="p-4 font-bold text-white">{v.variant_name}</td>
+                    <td className="p-4 font-mono text-emerald-400 font-semibold">
+                      {v.price != null ? `₹${v.price.toLocaleString("en-IN")}` : "—"}
+                    </td>
+                    <td className="p-4 text-[var(--color-text-muted)]">{v.fuel ?? "—"}</td>
+                    <td className="p-4 text-[var(--color-text-muted)]">{v.transmission ?? "—"}</td>
                     {canEdit && (
-                      <td className="p-3 text-right">
+                      <td className="p-4 text-right">
                         <button
                           onClick={async () => {
                             await deleteVariant(v.id);
-                            refresh(carId);
+                            listVariantsForCar(carId).then(setVariants);
                           }}
-                          className="text-danger text-xs hover:underline"
+                          className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 ml-auto"
                         >
-                          Delete
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
                         </button>
                       </td>
                     )}
                   </tr>
                 ))}
-                {variants.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="p-6 text-center text-ink-soft">
-                      No variants for this car yet.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </>
+        </SolidCard>
       )}
     </div>
-  );
-}
-
-function Field({ label, value, onChange, type = "text", required = false }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      <input
-        type={type}
-        required={required}
-        className="border border-line rounded-md px-3 py-2"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </label>
-  );
-}
-
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-medium">{label}</span>
-      <select className="border border-line rounded-md px-3 py-2 bg-surface" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">—</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }

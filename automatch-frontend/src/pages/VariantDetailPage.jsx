@@ -1,18 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getVariant, getOwnershipCost, getAlternatives } from "../api/client";
-import EmptyState from "../components/EmptyState";
+import SectionHeading from "../components/ui/SectionHeading";
+import SolidCard from "../components/ui/SolidCard";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import EmptyState from "../components/ui/EmptyState";
+import ErrorAlert from "../components/ui/ErrorAlert";
+import { CardSkeleton } from "../components/ui/Skeleton";
+import { ArrowLeft, Calculator, Sparkles, Shield, Fuel, DollarSign, ExternalLink } from "lucide-react";
 
 function money(v) {
   return v != null ? `₹${Math.round(v).toLocaleString("en-IN")}` : "—";
 }
 
 const COST_ROWS = [
-  ["purchase_price", "Purchase price"],
-  ["insurance_total", "Insurance (total)"],
-  ["fuel_total", "Fuel (total)"],
-  ["maintenance_total", "Maintenance (total)"],
-  ["road_tax", "Road tax"],
+  ["purchase_price", "Purchase Price (ex-showroom)"],
+  ["insurance_total", "Insurance (5-Year Total)"],
+  ["fuel_total", "Estimated Fuel / Energy Cost"],
+  ["maintenance_total", "Scheduled Maintenance & Service"],
+  ["road_tax", "Road Tax & Registration"],
 ];
 
 export default function VariantDetailPage() {
@@ -22,124 +29,198 @@ export default function VariantDetailPage() {
   const [alternatives, setAlternatives] = useState(null);
   const [annualKm, setAnnualKm] = useState(12000);
   const [years, setYears] = useState(5);
+  const [status, setStatus] = useState("loading");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    setStatus("loading");
     getVariant(id)
-      .then(setVariant)
-      .catch(() => setError("Couldn't load this variant."));
-    getAlternatives(id).then(setAlternatives).catch(() => setAlternatives([]));
+      .then((data) => {
+        setVariant(data);
+        setStatus("idle");
+      })
+      .catch(() => {
+        setStatus("error");
+        setError("Unable to retrieve vehicle variant details.");
+      });
+
+    getAlternatives(id)
+      .then(setAlternatives)
+      .catch(() => setAlternatives([]));
   }, [id]);
 
   useEffect(() => {
-    getOwnershipCost(id, { annual_km: annualKm, ownership_years: years })
-      .then(setCost)
-      .catch(() => setError("Couldn't calculate ownership cost."));
+    if (id) {
+      getOwnershipCost(id, { annual_km: annualKm, ownership_years: years })
+        .then(setCost)
+        .catch(() => {});
+    }
   }, [id, annualKm, years]);
 
-  if (error) {
-    return <EmptyState title="Something went wrong" description={error} />;
+  if (status === "loading") {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+    );
   }
-  if (!variant) {
-    return <div className="text-ink-soft text-sm">Loading…</div>;
+
+  if (status === "error" || !variant) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <ErrorAlert title="Variant Not Found" message={error} />
+      </div>
+    );
   }
 
   return (
-    <div>
-      <Link to="/" className="text-sm text-primary hover:underline">
-        &larr; Back
+    <div className="max-w-5xl mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in">
+      <Link to="/recommend" className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-white font-medium transition-colors">
+        <ArrowLeft className="w-4 h-4" /> Back to Recommendations
       </Link>
 
-      <header className="mt-3 mb-6">
-        <h1 className="font-display font-semibold text-2xl">{variant.variant_name}</h1>
-        <div className="font-data text-lg mt-1">{money(variant.price)}</div>
-      </header>
+      {/* Hero Header Card */}
+      <SolidCard className="border border-[var(--color-line-bright)] relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--color-line)]">
+          <div>
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+              {variant.manufacturer_name}
+            </span>
+            <h1 className="text-2xl md:text-3xl font-bold font-display text-white">
+              {variant.car_model} <span className="font-normal text-indigo-300">· {variant.variant_name}</span>
+            </h1>
+          </div>
+          <div className="text-right">
+            <span className="text-xs text-[var(--color-text-dim)] uppercase tracking-wider block">Ex-Showroom Price</span>
+            <span className="font-mono text-2xl font-bold text-white">{money(variant.price)}</span>
+          </div>
+        </div>
 
-      <section className="bg-surface border border-line rounded-lg p-5 mb-6">
-        <h2 className="font-display font-semibold text-lg mb-3">Ownership cost (SRS 4.5)</h2>
+        <div className="pt-4 flex flex-wrap gap-2">
+          {variant.fuel && <Badge variant="primary">{variant.fuel}</Badge>}
+          {variant.transmission && <Badge variant="cyan">{variant.transmission}</Badge>}
+          {variant.specifications?.safety_rating && (
+            <Badge variant="success" icon={Shield}>
+              {variant.specifications.safety_rating}/5 Safety Rating
+            </Badge>
+          )}
+          {variant.mileage && <Badge variant="neutral">{variant.mileage} km/l</Badge>}
+        </div>
+      </SolidCard>
 
-        <div className="flex flex-wrap gap-4 mb-4">
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Annual driving (km)</span>
+      {/* 5-Year Ownership Cost Calculator (SRS Section 4.5) */}
+      <SolidCard className="border border-[var(--color-line-bright)] space-y-6">
+        <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-3">
+          <div className="flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-lg font-bold font-display text-white">
+              5-Year Ownership Cost Estimator (SRS §4.5)
+            </h2>
+          </div>
+          <Badge variant="cyan">Transparent Breakdown</Badge>
+        </div>
+
+        {/* Dynamic Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[var(--color-surface-subtle)] p-4 rounded-xl border border-[var(--color-line)]">
+          <label className="flex flex-col gap-1.5 text-xs">
+            <span className="font-medium text-[var(--color-text-muted)]">Annual Driving Distance (km/year)</span>
             <input
               type="number"
-              className="border border-line rounded-md px-3 py-2 w-32"
+              min={1000}
+              step={1000}
               value={annualKm}
               onChange={(e) => setAnnualKm(Number(e.target.value))}
+              className="bg-[var(--color-surface-solid)] border border-[var(--color-line)] rounded-lg px-3 py-2 font-mono text-white"
             />
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">Ownership years</span>
+          <label className="flex flex-col gap-1.5 text-xs">
+            <span className="font-medium text-[var(--color-text-muted)]">Ownership Duration (Years)</span>
             <input
               type="number"
               min={1}
               max={15}
-              className="border border-line rounded-md px-3 py-2 w-24"
               value={years}
               onChange={(e) => setYears(Number(e.target.value))}
+              className="bg-[var(--color-surface-solid)] border border-[var(--color-line)] rounded-lg px-3 py-2 font-mono text-white"
             />
           </label>
         </div>
 
         {cost && (
-          <>
-            <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div className="space-y-4">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
               {COST_ROWS.map(([key, label]) => (
-                <div key={key} className="flex justify-between border-b border-line py-1.5">
-                  <dt className="text-ink-soft">{label}</dt>
-                  <dd className="font-data">{money(cost[key])}</dd>
+                <div key={key} className="flex justify-between items-center border-b border-[var(--color-line)] pb-2">
+                  <dt className="text-[var(--color-text-muted)] text-xs">{label}</dt>
+                  <dd className="font-mono text-white font-medium">{money(cost[key])}</dd>
                 </div>
               ))}
-              <div className="flex justify-between border-b border-line py-1.5">
-                <dt className="text-ink-soft">Expected resale value</dt>
-                <dd className="font-data text-accent">{money(cost.expected_resale_value)}</dd>
+              <div className="flex justify-between items-center border-b border-[var(--color-line)] pb-2">
+                <dt className="text-[var(--color-text-muted)] text-xs">Expected Resale Value after {years} Years</dt>
+                <dd className="font-mono text-emerald-400 font-medium">-{money(cost.expected_resale_value)}</dd>
               </div>
             </dl>
 
-            <div className="mt-4 pt-4 border-t-2 border-ink flex justify-between items-baseline">
-              <span className="font-medium">
-                Net {years}-year cost of ownership
-              </span>
-              <span className="font-data text-2xl font-semibold">{money(cost.net_cost_after_resale)}</span>
+            <div className="pt-4 border-t-2 border-indigo-500/50 flex items-baseline justify-between bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/30">
+              <div>
+                <div className="font-display font-bold text-lg text-white">Net {years}-Year Total Cost</div>
+                <div className="text-xs text-[var(--color-text-muted)]">Includes depreciation & resale recovery</div>
+              </div>
+              <div className="font-mono text-3xl font-bold text-cyan-400">
+                {money(cost.net_cost_after_resale)}
+              </div>
             </div>
 
-            <p className="text-xs text-ink-soft mt-3">{cost.assumptions?.note}</p>
-          </>
+            {cost.assumptions?.note && (
+              <p className="text-xs text-[var(--color-text-dim)] italic">
+                Note: {cost.assumptions.note}
+              </p>
+            )}
+          </div>
         )}
-      </section>
+      </SolidCard>
 
-      <section className="bg-surface border border-line rounded-lg p-5">
-        <h2 className="font-display font-semibold text-lg mb-3">You may also consider (SRS 4.7)</h2>
+      {/* "You May Also Consider" Alternatives (SRS Section 4.7) */}
+      <SolidCard className="border border-[var(--color-line-bright)] space-y-4">
+        <div className="flex items-center gap-2 border-b border-[var(--color-line)] pb-3">
+          <Sparkles className="w-5 h-5 text-cyan-400" />
+          <h2 className="text-lg font-bold font-display text-white">
+            You May Also Consider (SRS §4.7)
+          </h2>
+        </div>
 
-        {alternatives === null && <p className="text-sm text-ink-soft">Loading…</p>}
+        {alternatives === null && <div className="text-xs text-[var(--color-text-muted)]">Loading alternative models…</div>}
         {alternatives && alternatives.length === 0 && (
-          <p className="text-sm text-ink-soft">No clearly better alternatives found in a similar price range.</p>
+          <p className="text-xs text-[var(--color-text-muted)]">No better alternatives found within a similar budget bracket.</p>
         )}
+
         {alternatives && alternatives.length > 0 && (
           <div className="grid gap-3">
             {alternatives.map((alt) => (
-              <div key={alt.variant_id} className="border border-line rounded-md p-3">
-                <div className="flex justify-between items-baseline">
-                  <Link to={`/variants/${alt.variant_id}`} className="font-medium hover:underline">
+              <div key={alt.variant_id} className="p-4 rounded-xl bg-[var(--color-surface-subtle)] border border-[var(--color-line)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <Link to={`/variants/${alt.variant_id}`} className="font-bold text-white hover:text-cyan-400 transition-colors flex items-center gap-1.5">
                     {alt.manufacturer_name} {alt.car_model} — {alt.variant_name}
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
-                  <span className="font-data text-sm text-ink-soft">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {alt.reasons.map((r, idx) => (
+                      <Badge key={idx} variant="cyan">{r}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="font-mono text-sm font-semibold text-right">
+                  <span className={alt.price_difference >= 0 ? "text-amber-400" : "text-emerald-400"}>
                     {alt.price_difference >= 0 ? "+" : ""}
                     {money(alt.price_difference)}
                   </span>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {alt.reasons.map((r) => (
-                    <span key={r} className="text-xs bg-accent-soft text-accent px-2 py-1 rounded-full">
-                      {r}
-                    </span>
-                  ))}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </section>
+      </SolidCard>
     </div>
   );
 }
